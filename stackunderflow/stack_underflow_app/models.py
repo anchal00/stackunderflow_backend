@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
 from django.contrib.auth.validators import ASCIIUsernameValidator
+from django.db import models
+
 
 class User(AbstractUser):
     username_validator = ASCIIUsernameValidator()
@@ -24,3 +25,31 @@ class User(AbstractUser):
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
+
+
+class Question(models.Model):
+    OPEN = 'OPEN'
+    CLOSED = 'CLOSED'
+
+    QUESTION_STATUS = [
+        (OPEN, 'Open'),
+        (CLOSED, 'Closed'),
+    ]
+
+    NOT_CLEAR = 'NOT_CLEAR'
+    DUPLICATE = 'DUPLICATE'
+    INVALID = 'INVALID'
+
+    QUESTION_CLOSING_REMARK = [
+        (NOT_CLEAR, 'Not clear'),
+        (DUPLICATE, 'Duplicate question'),
+        (INVALID, 'Not a valid question'),
+    ]
+
+    title = models.CharField('question title', max_length=60, blank=False, null=False)
+    description = models.TextField('detailed description of the question/issue', blank=True, null=True)
+    upvotes = models.IntegerField('upvotes', null=False, default=0)
+    downvotes = models.IntegerField('downvotes', null=False, default=0)
+    viewcount = models.IntegerField('number of times question is viewed', null=False, default=0)
+    status = models.CharField('question status', max_length=7, choices=QUESTION_STATUS, default=OPEN)
+    closing_remark = models.CharField('question closing remark', max_length=10, choices=QUESTION_CLOSING_REMARK, null=True)
