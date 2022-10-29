@@ -4,7 +4,7 @@ from django.db import models
 from django.utils import timezone
 
 class Tag(models.Model):
-    name = models.CharField('tag name', max_length=10, blank=False, null=False)
+    name = models.CharField('tag name', max_length=10, blank=False, null=False, unique=True, db_index=True)
     description = models.CharField('description of the tag', max_length=20, blank=True)
 
 
@@ -60,6 +60,7 @@ class Question(models.Model):
     closing_remark = models.CharField('question closing remark', max_length=10, choices=QUESTION_CLOSING_REMARK, null=True)
     created_at = models.DateTimeField('question posted at', auto_now_add=True)
     updated_at = models.DateTimeField('question updated at', auto_now=True)
+    tags = models.ManyToManyField(Tag)
 
 
 class Answer(models.Model):
