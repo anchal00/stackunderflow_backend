@@ -1,6 +1,11 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.db import models
+from django.utils import timezone
+
+class Tag(models.Model):
+    name = models.CharField('tag name', max_length=10, blank=False, null=False)
+    description = models.CharField('description of the tag', max_length=20, blank=True)
 
 
 class User(AbstractUser):
@@ -53,3 +58,13 @@ class Question(models.Model):
     viewcount = models.IntegerField('number of times question is viewed', null=False, default=0)
     status = models.CharField('question status', max_length=7, choices=QUESTION_STATUS, default=OPEN)
     closing_remark = models.CharField('question closing remark', max_length=10, choices=QUESTION_CLOSING_REMARK, null=True)
+
+
+class Answer(models.Model):
+    question = models.OneToOneField(to=Question, on_delete=models.CASCADE)
+    answer_body = models.TextField('answer body', blank=False)
+    upvotes = models.IntegerField('upvotes', null=False, default=0)
+    downvotes = models.IntegerField('downvotes', null=False, default=0)
+    created_at = models.DateTimeField('answer posted at', auto_now_add=True)
+    updated_at = models.DateTimeField('answer updated at', auto_now=True)
+
