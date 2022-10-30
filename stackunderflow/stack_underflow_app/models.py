@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.db import models
-from django.utils import timezone
+
 
 class Tag(models.Model):
     name = models.CharField('tag name', max_length=10, blank=False, null=False, unique=True, db_index=True)
@@ -30,6 +30,18 @@ class User(AbstractUser):
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
+
+
+class PostType(models.Model):
+    QUES = 'QUESTION'
+    ANS = 'ANSWER'
+
+    POST_TYPES = [
+        (QUES, 'Question'),
+        (ANS, 'Answer')
+    ]
+
+    name = models.CharField('post type', max_length=5, choices=POST_TYPES, default=QUES, unique=True)
 
 
 class Question(models.Model):
@@ -64,10 +76,20 @@ class Question(models.Model):
 
 
 class Answer(models.Model):
-    question = models.OneToOneField(to=Question, on_delete=models.CASCADE)
+    question = models.ForeignKey(to=Question, on_delete=models.CASCADE)
+    author = models.OneToOneField(to=User, on_delete=models.CASCADE)
     answer_body = models.TextField('answer body', blank=False)
     upvotes = models.IntegerField('upvotes', null=False, default=0)
     downvotes = models.IntegerField('downvotes', null=False, default=0)
     created_at = models.DateTimeField('answer posted at', auto_now_add=True)
     updated_at = models.DateTimeField('answer updated at', auto_now=True)
 
+
+class Comment(models.Model):
+    body = models.CharField('comment body', max_length=100, blank=False, null=False)
+    post = models.ForeignKey(to=PostType, on_delete=models.CASCADE)
+    author = models.OneToOneField(to=User, on_delete=models.CASCADE)
+    upvotes = models.IntegerField('upvotes', null=False, default=0)
+    downvotes = models.IntegerField('downvotes', null=False, default=0)
+    created_at = models.DateTimeField('comment posted at', auto_now_add=True)
+    updated_at = models.DateTimeField('comment updated at', auto_now=True)
