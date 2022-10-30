@@ -41,7 +41,7 @@ class PostType(models.Model):
         (ANS, 'Answer')
     ]
 
-    name = models.CharField('post type', max_length=5, choices=POST_TYPES, default=QUES, unique=True)
+    name = models.CharField('post type', max_length=10, choices=POST_TYPES, default=QUES, unique=True)
 
 
 class Question(models.Model):
