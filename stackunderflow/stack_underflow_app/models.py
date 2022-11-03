@@ -83,6 +83,7 @@ class Answer(models.Model):
     downvotes = models.IntegerField('downvotes', null=False, default=0)
     created_at = models.DateTimeField('answer posted at', auto_now_add=True)
     updated_at = models.DateTimeField('answer updated at', auto_now=True)
+    is_accepted = models.BooleanField('is accepted answer', default=False)
 
 
 class Comment(models.Model):
