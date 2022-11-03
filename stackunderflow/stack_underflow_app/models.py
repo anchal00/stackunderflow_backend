@@ -87,7 +87,8 @@ class Answer(models.Model):
 
 class Comment(models.Model):
     body = models.CharField('comment body', max_length=100, blank=False, null=False)
-    post = models.ForeignKey(to=PostType, on_delete=models.CASCADE)
+    post_id = models.BigIntegerField('post id')
+    post_type = models.ForeignKey(to=PostType, on_delete=models.SET_NULL, null=True)
     author = models.OneToOneField(to=User, on_delete=models.CASCADE)
     upvotes = models.IntegerField('upvotes', null=False, default=0)
     downvotes = models.IntegerField('downvotes', null=False, default=0)
