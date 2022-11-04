@@ -1,6 +1,5 @@
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-
-from .models import User
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from stack_underflow_app.models import User
 
 
 class CustomUserCreationForm(UserCreationForm):

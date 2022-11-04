@@ -1,11 +1,9 @@
 from django.contrib import admin
-
-from .models import User
-
-from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from stack_underflow_app.forms import (CustomUserChangeForm,
+                                       CustomUserCreationForm)
+from stack_underflow_app.models import User
 
-from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
@@ -22,12 +20,15 @@ class CustomUserAdmin(UserAdmin):
         ('Login and Joining Info', {'fields': ('last_login', 'date_joined')})
     )
     add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2', 'is_staff', 'is_active', 'dob')}
+        (
+            None, {
+                'classes': ('wide',),
+                'fields': ('username', 'email', 'password1', 'password2', 'is_staff', 'is_active', 'dob')
+            }
         ),
     )
     search_fields = ('email',)
     ordering = ('email',)
+
 
 admin.site.register(User, CustomUserAdmin)

@@ -69,7 +69,12 @@ class Question(models.Model):
     downvotes = models.IntegerField('downvotes', null=False, default=0)
     viewcount = models.IntegerField('number of times question is viewed', null=False, default=0)
     status = models.CharField('question status', max_length=7, choices=QUESTION_STATUS, default=OPEN)
-    closing_remark = models.CharField('question closing remark', max_length=10, choices=QUESTION_CLOSING_REMARK, null=True)
+    closing_remark = models.CharField(
+        'question closing remark',
+        max_length=10,
+        choices=QUESTION_CLOSING_REMARK,
+        null=True
+    )
     created_at = models.DateTimeField('question posted at', auto_now_add=True)
     updated_at = models.DateTimeField('question updated at', auto_now=True)
     tags = models.ManyToManyField(Tag)

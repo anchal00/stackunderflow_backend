@@ -3,9 +3,16 @@ Django==3.2.16
 django-filter==21.1
 djangorestframework==3.14.0
 djangorestframework-simplejwt==4.4.0
+flake8==5.0.4
+importlib-metadata==4.2.0
+isort==5.10.1
+mccabe==0.7.0
 psycopg2==2.9.5
+pycodestyle==2.9.1
+pyflakes==2.5.0
 PyJWT==1.7.1
 python-dotenv==0.20.0
 pytz==2022.5
 sqlparse==0.4.3
 typing-extensions==4.1.1
+zipp==3.6.0
