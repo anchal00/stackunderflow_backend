@@ -1,4 +1,3 @@
-from django.urls import path
 from rest_framework.routers import DefaultRouter
 from stack_underflow_app.apis.question_apis import QuestionViewSet
 from stack_underflow_app.apis.tag_apis import TagViewSet

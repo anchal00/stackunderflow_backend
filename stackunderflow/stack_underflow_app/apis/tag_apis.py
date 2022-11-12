@@ -23,8 +23,8 @@ class TagSerializer(serializers.ModelSerializer):
         tag_name = data_dict.get('name')
         tag_desc = data_dict.get('description')
         tag = Tag(name=tag_name, description=tag_desc)
-        tag, _ = Tag.objects.get_or_create(name=tag_name, defaults= {'description':tag_desc})
-        return tag       
+        tag, _ = Tag.objects.get_or_create(name=tag_name, defaults={'description': tag_desc})
+        return tag
 
 
 class TagViewSet(ModelViewSet):

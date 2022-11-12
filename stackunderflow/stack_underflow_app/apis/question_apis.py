@@ -37,7 +37,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             tag_objects.append(Tag.objects.get(name=tag['name']))
         question = Question.objects.create(**validated_data)
         question.tags.set(tag_objects)
-        return question      
+        return question
 
 
 class QuestionViewSet(ModelViewSet):
