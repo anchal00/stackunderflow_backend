@@ -65,6 +65,7 @@ class Question(models.Model):
 
     title = models.CharField('question title', max_length=60, blank=False, null=False)
     description = models.TextField('detailed description of the question/issue', blank=True, null=True)
+    author = models.ForeignKey(to=User, null=True, on_delete=models.SET_NULL)
     upvotes = models.IntegerField('upvotes', null=False, default=0)
     downvotes = models.IntegerField('downvotes', null=False, default=0)
     viewcount = models.IntegerField('number of times question is viewed', null=False, default=0)
