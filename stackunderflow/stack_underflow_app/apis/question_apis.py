@@ -54,8 +54,9 @@ class QuestionViewSet(ModelViewSet):
     def get_serializer(self, *args, **kwargs):
         if self.action == "list":
             return QuestionSerializer(self.queryset, many=True)
-        question_data = kwargs["data"]
-        return QuestionSerializer(data=question_data, context={'request': kwargs["request"]})
+        elif self.action == "retrieve":
+            return QuestionSerializer(kwargs["data"])
+        return QuestionSerializer(data=kwargs["data"], context={'request': kwargs["request"]})
 
     def list(self, request):
         serializer = self.get_serializer()
@@ -68,3 +69,7 @@ class QuestionViewSet(ModelViewSet):
         question = question_serializer.save()
         logger.info(msg=f'Question with id: {question.id} posted successfully by: {request.user}')
         return Response(status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, pk):
+        serializer = self.get_serializer(data=self.get_object())
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
