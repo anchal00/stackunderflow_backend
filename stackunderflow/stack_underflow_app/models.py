@@ -66,8 +66,6 @@ class Question(models.Model):
     title = models.CharField('question title', max_length=60, blank=False, null=False)
     description = models.TextField('detailed description of the question/issue', blank=True, null=True)
     author = models.ForeignKey(to=User, null=True, on_delete=models.SET_NULL)
-    upvotes = models.IntegerField('upvotes', null=False, default=0)
-    downvotes = models.IntegerField('downvotes', null=False, default=0)
     viewcount = models.IntegerField('number of times question is viewed', null=False, default=0)
     status = models.CharField('question status', max_length=7, choices=QUESTION_STATUS, default=OPEN)
     closing_remark = models.CharField(
@@ -79,6 +77,14 @@ class Question(models.Model):
     created_at = models.DateTimeField('question posted at', auto_now_add=True)
     updated_at = models.DateTimeField('question updated at', auto_now=True)
     tags = models.ManyToManyField(Tag)
+
+    @property
+    def upvotes(self):
+        return len(Votes.objects.filter(question=self, upvote=True))
+
+    @property
+    def downvotes(self):
+        return len(Votes.objects.filter(question=self, downvote=True))
 
 
 class Answer(models.Model):
