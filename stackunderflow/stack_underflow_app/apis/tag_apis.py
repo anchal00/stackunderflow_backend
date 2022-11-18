@@ -2,6 +2,7 @@ import logging
 from json import dumps, loads
 
 from rest_framework import serializers, status
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from stack_underflow_app.models import Tag
@@ -31,6 +32,7 @@ class TagSerializer(serializers.ModelSerializer):
 class TagViewSet(ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = [IsAdminUser]
 
     def create(self, request):
         tag_data = request.data
