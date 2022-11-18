@@ -101,3 +101,13 @@ class Comment(models.Model):
     downvotes = models.IntegerField('downvotes', null=False, default=0)
     created_at = models.DateTimeField('comment posted at', auto_now_add=True)
     updated_at = models.DateTimeField('comment updated at', auto_now=True)
+
+
+class Votes(models.Model):
+    class Meta:
+        unique_together = (("question", "user"),)
+
+    question = models.ForeignKey(to=Question, on_delete=models.CASCADE)
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
+    upvote = models.BooleanField('Is upvote')
+    downvote = models.BooleanField('Is downvote')

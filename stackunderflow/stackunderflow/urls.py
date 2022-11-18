@@ -7,8 +7,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # JWT token routes
-    path('auth/token', TokenObtainPairView.as_view(), name='get_token'),
-    path('auth/token/refresh', TokenRefreshView.as_view(), name='refresh_token'),
+    path('stackunderflow/api/token', TokenObtainPairView.as_view(), name='get_token'),
+    path('stackunderflow/api/token/refresh', TokenRefreshView.as_view(), name='refresh_token'),
 
-    path('stackunderflow/', include('stack_underflow_app.urls')),
+    path('stackunderflow/api/', include('stack_underflow_app.urls')),
 ]
