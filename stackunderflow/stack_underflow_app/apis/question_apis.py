@@ -79,10 +79,12 @@ class QuestionViewSet(ModelViewSet):
     def upvote(self, request, pk):
         user_id = request.user.id
         question_id = pk
-        vote, created = Votes.objects.get_or_create(question_id=question_id, user_id=user_id, defaults={"upvote": True, "downvote": False})
+        vote, created = Votes.objects.get_or_create(question_id=question_id,
+                                                    user_id=user_id,
+                                                    defaults={"upvote": True, "downvote": False})
         had_already_voted = not created
         if had_already_voted:
-            if vote.upvote == True:
+            if vote.upvote:
                 # Remove the vote if user had already upvoted and now upvotes again
                 vote.delete()
             else:
@@ -97,10 +99,12 @@ class QuestionViewSet(ModelViewSet):
     def downvote(self, request, pk):
         user_id = request.user.id
         question_id = pk
-        vote, created = Votes.objects.get_or_create(question_id=question_id, user_id=user_id, defaults={"upvote": False, "downvote": True})
+        vote, created = Votes.objects.get_or_create(question_id=question_id,
+                                                    user_id=user_id,
+                                                    defaults={"upvote": False, "downvote": True})
         had_already_voted = not created
         if had_already_voted:
-            if vote.downvote == True:
+            if vote.downvote:
                 # Remove the vote if user had already downvoted and now downvotes again
                 vote.delete()
             else:
