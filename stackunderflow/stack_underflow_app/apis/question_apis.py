@@ -79,50 +79,40 @@ class QuestionViewSet(ModelViewSet):
     def upvote(self, request, pk):
         user_id = request.user.id
         question_id = pk
-        try:
-            Question.objects.get(id=question_id)
-            vote, created = Votes.objects.get_or_create(post_id=question_id,
-                                                        post_type=PostType.objects.get(name=PostType.QUES),
-                                                        user_id=user_id,
-                                                        defaults={"upvote": True, "downvote": False})
-            had_already_voted = not created
-            if had_already_voted:
-                if vote.upvote:
-                    # Remove the vote if user had already upvoted and now upvotes again
-                    vote.delete()
-                else:
-                    # Previous vote was a downvote and now user is upvoting
-                    vote.upvote = True
-                    vote.downvote = False
-                    vote.save()
-            logger.info(msg=f"Vote with Id {vote.id} recorded successfully")
-            return Response(status=status.HTTP_200_OK)
-        except Question.DoesNotExist:
-            pass
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        vote, created = Votes.objects.get_or_create(post_id=question_id,
+                                                    post_type=PostType.objects.get(name=PostType.QUES),
+                                                    user_id=user_id,
+                                                    defaults={"upvote": True, "downvote": False})
+        had_already_voted = not created
+        if had_already_voted:
+            if vote.upvote:
+                # Remove the vote if user had already upvoted and now upvotes again
+                vote.delete()
+            else:
+                # Previous vote was a downvote and now user is upvoting
+                vote.upvote = True
+                vote.downvote = False
+                vote.save()
+        logger.info(msg=f"Vote with Id {vote.id} recorded successfully")
+        return Response(status=status.HTTP_200_OK)
 
     @action(methods=["POST"], detail=True)
     def downvote(self, request, pk):
         user_id = request.user.id
         question_id = pk
-        try:
-            Question.objects.get(id=question_id)
-            vote, created = Votes.objects.get_or_create(post_id=question_id,
-                                                        post_type=PostType.objects.get(name=PostType.QUES),
-                                                        user_id=user_id,
-                                                        defaults={"upvote": False, "downvote": True})
-            had_already_voted = not created
-            if had_already_voted:
-                if vote.downvote:
-                    # Remove the vote if user had already downvoted and now downvotes again
-                    vote.delete()
-                else:
-                    # Previous vote was a upvote and now user is downvoting
-                    vote.upvote = False
-                    vote.downvote = True
-                    vote.save()
-            logger.info(msg=f"Vote with Id {vote.id} recorded successfully")
-            return Response(status=status.HTTP_200_OK)
-        except Question.DoesNotExist:
-            pass
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        vote, created = Votes.objects.get_or_create(post_id=question_id,
+                                                    post_type=PostType.objects.get(name=PostType.QUES),
+                                                    user_id=user_id,
+                                                    defaults={"upvote": False, "downvote": True})
+        had_already_voted = not created
+        if had_already_voted:
+            if vote.downvote:
+                # Remove the vote if user had already downvoted and now downvotes again
+                vote.delete()
+            else:
+                # Previous vote was a upvote and now user is downvoting
+                vote.upvote = False
+                vote.downvote = True
+                vote.save()
+        logger.info(msg=f"Vote with Id {vote.id} recorded successfully")
+        return Response(status=status.HTTP_200_OK)
