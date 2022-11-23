@@ -5,8 +5,9 @@ from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from stack_underflow_app.apis.answer_apis import AnswerSerializer
 from stack_underflow_app.apis.tag_apis import TagSerializer
-from stack_underflow_app.models import PostType, Question, Tag, Votes
+from stack_underflow_app.models import Answer, PostType, Question, Tag, Votes
 from stack_underflow_app.permissions import CustomPermissions
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     status = serializers.ReadOnlyField()
     author = serializers.StringRelatedField(read_only=True)
     closing_remark = serializers.ReadOnlyField()
+    answers = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
@@ -45,6 +47,11 @@ class QuestionSerializer(serializers.ModelSerializer):
         question.save()
         question.tags.set(tag_objects)
         return question
+
+    def get_answers(self, obj):
+        answers = Answer.objects.filter(question=obj)
+        serializer = AnswerSerializer(answers, many=True)
+        return serializer.data
 
 
 class QuestionViewSet(ModelViewSet):
