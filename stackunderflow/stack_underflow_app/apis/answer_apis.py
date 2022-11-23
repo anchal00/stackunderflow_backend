@@ -1,9 +1,10 @@
 import logging
 
 from rest_framework import serializers, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from stack_underflow_app.models import Answer
+from stack_underflow_app.models import Answer, PostType, Votes
 from stack_underflow_app.permissions import CustomPermissions
 
 logger = logging.getLogger(__name__)
@@ -38,5 +39,48 @@ class AnswerViewSet(ModelViewSet):
         data["author"] = user
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        answer = serializer.save()
+        logger.info(msg=f"Answer with id: {answer.id} posted successfully by: {request.user}")
         return Response(status=status.HTTP_201_CREATED)
+
+    @action(methods=["POST"], detail=True)
+    def upvote(self, request, pk):
+        user_id = request.user.id
+        answer_id = pk
+        vote, created = Votes.objects.get_or_create(post_id=answer_id,
+                                                    post_type=PostType.objects.get(name=PostType.ANS),
+                                                    user_id=user_id,
+                                                    defaults={"upvote": True, "downvote": False})
+        had_already_voted = not created
+        if had_already_voted:
+            if vote.upvote:
+                # Remove the vote if user had already upvoted and now upvotes again
+                vote.delete()
+            else:
+                # Previous vote was a downvote and now user is upvoting
+                vote.upvote = True
+                vote.downvote = False
+                vote.save()
+        logger.info(msg=f"Vote with Id {vote.id} recorded successfully for Answer with Id {answer_id}")
+        return Response(status=status.HTTP_200_OK)
+
+    @action(methods=["POST"], detail=True)
+    def downvote(self, request, pk):
+        user_id = request.user.id
+        answer_id = pk
+        vote, created = Votes.objects.get_or_create(post_id=answer_id,
+                                                    post_type=PostType.objects.get(name=PostType.ANS),
+                                                    user_id=user_id,
+                                                    defaults={"upvote": False, "downvote": True})
+        had_already_voted = not created
+        if had_already_voted:
+            if vote.downvote:
+                # Remove the vote if user had already downvoted and now downvotes again
+                vote.delete()
+            else:
+                # Previous vote was a upvote and now user is downvoting
+                vote.upvote = False
+                vote.downvote = True
+                vote.save()
+        logger.info(msg=f"Vote with Id {vote.id} recorded successfully for Answer with Id {answer_id}")
+        return Response(status=status.HTTP_200_OK)
