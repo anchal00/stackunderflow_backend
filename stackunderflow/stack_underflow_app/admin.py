@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from stack_underflow_app.forms import (CustomUserChangeForm,
                                        CustomUserCreationForm)
-from stack_underflow_app.models import User
+from stack_underflow_app.models import PostType, User
 
 
 class CustomUserAdmin(UserAdmin):
@@ -32,3 +32,4 @@ class CustomUserAdmin(UserAdmin):
 
 
 admin.site.register(User, CustomUserAdmin)
+admin.site.register(PostType)

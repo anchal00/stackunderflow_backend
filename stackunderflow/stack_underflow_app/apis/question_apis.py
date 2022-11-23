@@ -6,8 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from stack_underflow_app.apis.tag_apis import TagSerializer
-from stack_underflow_app.models import Question, Tag, Votes
-from stack_underflow_app.permissions import QuestionAPIPermissions
+from stack_underflow_app.models import PostType, Question, Tag, Votes
+from stack_underflow_app.permissions import CustomPermissions
 
 logger = logging.getLogger(__name__)
 
@@ -25,21 +25,21 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = '__all__'
+        fields = "__all__"
 
     def create(self, validated_data):
-        logger.info(msg='Creating Question object')
+        logger.info(msg="Creating Question object")
         # Serializing the validated data and then De-Serializing it again,
         # to convert OrderedDict into Dict for easier use
-        tags_data = loads(dumps(validated_data.pop('tags')))
+        tags_data = loads(dumps(validated_data.pop("tags")))
         # User who posted the question
-        user = self.context['request'].user
+        user = self.context["request"].user
         serializer = TagSerializer(data=tags_data, many=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         tag_objects = []
         for tag in tags_data:
-            tag_objects.append(Tag.objects.get(name=tag['name']))
+            tag_objects.append(Tag.objects.get(name=tag["name"]))
         question = Question.objects.create(**validated_data)
         question.author = user
         question.save()
@@ -50,14 +50,14 @@ class QuestionSerializer(serializers.ModelSerializer):
 class QuestionViewSet(ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
-    permission_classes = [QuestionAPIPermissions]
+    permission_classes = [CustomPermissions]
 
     def get_serializer(self, *args, **kwargs):
         if self.action == "list":
             return QuestionSerializer(self.queryset, many=True)
         elif self.action == "retrieve":
             return QuestionSerializer(kwargs["data"])
-        return QuestionSerializer(data=kwargs["data"], context={'request': kwargs["request"]})
+        return QuestionSerializer(data=kwargs["data"], context={"request": kwargs["request"]})
 
     def list(self, request):
         serializer = self.get_serializer()
@@ -68,7 +68,7 @@ class QuestionViewSet(ModelViewSet):
         question_serializer = self.get_serializer(data=question_data, request=request)
         question_serializer.is_valid(raise_exception=True)
         question = question_serializer.save()
-        logger.info(msg=f'Question with id: {question.id} posted successfully by: {request.user}')
+        logger.info(msg=f"Question with id: {question.id} posted successfully by: {request.user}")
         return Response(status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk):
@@ -79,38 +79,50 @@ class QuestionViewSet(ModelViewSet):
     def upvote(self, request, pk):
         user_id = request.user.id
         question_id = pk
-        vote, created = Votes.objects.get_or_create(question_id=question_id,
-                                                    user_id=user_id,
-                                                    defaults={"upvote": True, "downvote": False})
-        had_already_voted = not created
-        if had_already_voted:
-            if vote.upvote:
-                # Remove the vote if user had already upvoted and now upvotes again
-                vote.delete()
-            else:
-                # Previous vote was a downvote and now user is upvoting
-                vote.upvote = True
-                vote.downvote = False
-                vote.save()
-        logger.info(msg=f"Vote with Id {vote.id} recorded successfully")
-        return Response(status=status.HTTP_200_OK)
+        try:
+            Question.objects.get(id=question_id)
+            vote, created = Votes.objects.get_or_create(post_id=question_id,
+                                                        post_type=PostType.objects.get(name=PostType.QUES),
+                                                        user_id=user_id,
+                                                        defaults={"upvote": True, "downvote": False})
+            had_already_voted = not created
+            if had_already_voted:
+                if vote.upvote:
+                    # Remove the vote if user had already upvoted and now upvotes again
+                    vote.delete()
+                else:
+                    # Previous vote was a downvote and now user is upvoting
+                    vote.upvote = True
+                    vote.downvote = False
+                    vote.save()
+            logger.info(msg=f"Vote with Id {vote.id} recorded successfully")
+            return Response(status=status.HTTP_200_OK)
+        except Question.DoesNotExist:
+            pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=["POST"], detail=True)
     def downvote(self, request, pk):
         user_id = request.user.id
         question_id = pk
-        vote, created = Votes.objects.get_or_create(question_id=question_id,
-                                                    user_id=user_id,
-                                                    defaults={"upvote": False, "downvote": True})
-        had_already_voted = not created
-        if had_already_voted:
-            if vote.downvote:
-                # Remove the vote if user had already downvoted and now downvotes again
-                vote.delete()
-            else:
-                # Previous vote was a upvote and now user is downvoting
-                vote.upvote = False
-                vote.downvote = True
-                vote.save()
-        logger.info(msg=f"Vote with Id {vote.id} recorded successfully")
-        return Response(status=status.HTTP_200_OK)
+        try:
+            Question.objects.get(id=question_id)
+            vote, created = Votes.objects.get_or_create(post_id=question_id,
+                                                        post_type=PostType.objects.get(name=PostType.QUES),
+                                                        user_id=user_id,
+                                                        defaults={"upvote": False, "downvote": True})
+            had_already_voted = not created
+            if had_already_voted:
+                if vote.downvote:
+                    # Remove the vote if user had already downvoted and now downvotes again
+                    vote.delete()
+                else:
+                    # Previous vote was a upvote and now user is downvoting
+                    vote.upvote = False
+                    vote.downvote = True
+                    vote.save()
+            logger.info(msg=f"Vote with Id {vote.id} recorded successfully")
+            return Response(status=status.HTTP_200_OK)
+        except Question.DoesNotExist:
+            pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
