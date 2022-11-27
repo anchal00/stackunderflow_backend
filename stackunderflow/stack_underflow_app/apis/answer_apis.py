@@ -43,6 +43,26 @@ class AnswerViewSet(ModelViewSet):
         logger.info(msg=f"Answer with id: {answer.id} posted successfully by: {request.user}")
         return Response(status=status.HTTP_201_CREATED)
 
+    def partial_update(self, request, *args, **kwargs):
+        data = request.data
+        if data.get("question") or data.get("author"):
+            return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"error": "Cannot modify 'author' or 'question' fields"}
+                )
+        answer = self.get_object()
+        if data.get("is_accepted"):
+            if len(Answer.objects.filter(question=answer.question, is_accepted=True)) == 1:
+                return Response(
+                       status=status.HTTP_400_BAD_REQUEST,
+                       data={"error": "Cannot accept multiple answers for a question"}
+                    )
+        serializer = self.get_serializer(answer, data=request.data, partial=True, context={"question": answer.question})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        logger.info(msg=f"Answer with Id {answer.id} updated successfully")
+        return Response(status=status.HTTP_200_OK)
+
     @action(methods=["POST"], detail=True)
     def upvote(self, request, pk):
         user_id = request.user.id
