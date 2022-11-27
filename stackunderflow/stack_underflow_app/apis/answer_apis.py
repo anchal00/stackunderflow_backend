@@ -35,7 +35,8 @@ class AnswerViewSet(ModelViewSet):
             and data.get("answer_body")
         ):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
+        if data.get("is_accepted"):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         data["author"] = user
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -51,13 +52,18 @@ class AnswerViewSet(ModelViewSet):
                     data={"error": "Cannot modify 'author' or 'question' fields"}
                 )
         answer = self.get_object()
+        question = answer.question
+        logger.info(f" author = {question.author} user = {request.user}")
         if data.get("is_accepted"):
-            if len(Answer.objects.filter(question=answer.question, is_accepted=True)) == 1:
+            if question.accepted_answer:
                 return Response(
                        status=status.HTTP_400_BAD_REQUEST,
                        data={"error": "Cannot accept multiple answers for a question"}
                     )
-        serializer = self.get_serializer(answer, data=request.data, partial=True, context={"question": answer.question})
+            if request.user != question.author:
+                # Only the author of the question should be able to mark the answer as accepted
+                return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = self.get_serializer(answer, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         logger.info(msg=f"Answer with Id {answer.id} updated successfully")
