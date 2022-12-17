@@ -126,7 +126,7 @@ class Comment(models.Model):
     body = models.CharField("comment body", max_length=100, blank=False, null=False)
     post_id = models.BigIntegerField("post id")
     post_type = models.ForeignKey(to=PostType, on_delete=models.SET_NULL, null=True)
-    author = models.OneToOneField(to=User, on_delete=models.CASCADE)
+    author = models.ForeignKey(to=User, on_delete=models.CASCADE)
     created_at = models.DateTimeField("comment posted at", auto_now_add=True)
     updated_at = models.DateTimeField("comment updated at", auto_now=True)
 
