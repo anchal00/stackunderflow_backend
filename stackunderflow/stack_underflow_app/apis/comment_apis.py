@@ -4,6 +4,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from stack_underflow_app.models import Comment, PostType
+from stack_underflow_app.permissions import CustomPermissions
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = [CustomPermissions]
 
     def create(self, request, post_type):
         comment_data = request.data
