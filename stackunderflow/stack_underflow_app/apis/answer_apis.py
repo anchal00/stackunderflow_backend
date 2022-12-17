@@ -46,23 +46,21 @@ class AnswerViewSet(ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         data = request.data
+        answer = self.get_object()
+        question = answer.question
+        if request.user != question.author:
+            # Only the author of the question should be able to update the Question
+            return Response(status=status.HTTP_403_FORBIDDEN)
         if data.get("question") or data.get("author"):
             return Response(
                     status=status.HTTP_400_BAD_REQUEST,
                     data={"error": "Cannot modify 'author' or 'question' fields"}
                 )
-        answer = self.get_object()
-        question = answer.question
-        logger.info(f" author = {question.author} user = {request.user}")
-        if data.get("is_accepted"):
-            if question.accepted_answer:
-                return Response(
-                       status=status.HTTP_400_BAD_REQUEST,
-                       data={"error": "Cannot accept multiple answers for a question"}
-                    )
-            if request.user != question.author:
-                # Only the author of the question should be able to mark the answer as accepted
-                return Response(status=status.HTTP_403_FORBIDDEN)
+        if data.get("is_accepted") and question.accepted_answer:
+            return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"error": "Cannot accept multiple answers for a question"}
+                )
         serializer = self.get_serializer(answer, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()

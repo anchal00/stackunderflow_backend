@@ -91,6 +91,7 @@ class Question(models.Model):
         return len(Votes.objects.filter(post_id=self.id,
                                         post_type=PostType.objects.get(name=PostType.QUES),
                                         downvote=True))
+
     @property
     def accepted_answer(self):
         try:
@@ -98,6 +99,7 @@ class Question(models.Model):
         except Answer.DoesNotExist:
             pass
         return None
+
 
 class Answer(models.Model):
     question = models.ForeignKey(to=Question, on_delete=models.CASCADE)
