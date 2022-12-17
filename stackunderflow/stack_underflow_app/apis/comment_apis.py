@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField()
     created_at = serializers.ReadOnlyField()
     updated_at = serializers.ReadOnlyField()
     author = serializers.StringRelatedField(read_only=True)
@@ -17,6 +18,7 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = [
+            "id",
             "body",
             "author",
             "post_id",
@@ -62,6 +64,7 @@ class CommentViewSet(ModelViewSet):
                     data={"error": "Cannot modify 'author' or 'post_id' fields"}
                 )
         serializer = self.get_serializer(comment, data=comment_data, partial=True)
+        serializer.is_valid(raise_exception=True)
         serializer.save()
         logger.info(msg=f"Comment with {comment.id} updated successfully")
         return Response(status=status.HTTP_200_OK)

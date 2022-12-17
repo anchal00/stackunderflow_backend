@@ -4,7 +4,8 @@ from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from stack_underflow_app.models import Answer, PostType, Votes
+from stack_underflow_app.apis.comment_apis import CommentSerializer
+from stack_underflow_app.models import Answer, Comment, PostType, Votes
 from stack_underflow_app.permissions import CustomPermissions
 
 logger = logging.getLogger(__name__)
@@ -15,10 +16,17 @@ class AnswerSerializer(serializers.ModelSerializer):
     updated_at = serializers.ReadOnlyField()
     upvotes = serializers.ReadOnlyField()
     downvotes = serializers.ReadOnlyField()
+    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Answer
         fields = "__all__"
+
+    def get_comments(self, obj):
+        comments = Comment.objects.filter(post_type=PostType.objects.get(name=PostType.ANS),
+                                          post_id=obj.id)
+        serializer = CommentSerializer(comments, many=True)
+        return serializer.data
 
 
 class AnswerViewSet(ModelViewSet):
