@@ -26,6 +26,7 @@ class User(AbstractUser):
     email = models.EmailField("email address", unique=True, blank=False)
     profession = models.CharField("profession", max_length=50, blank=True)
     dob = models.DateField("date of birth", help_text="Date of birth in format YYYY-MM-DD", null=True)
+    reputation_points = models.IntegerField("reputation points", default=0)
 
     EMAIL_FIELD = "email"
     USERNAME_FIELD = "username"
