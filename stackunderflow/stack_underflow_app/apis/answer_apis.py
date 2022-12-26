@@ -6,7 +6,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from stack_underflow_app.apis.comment_apis import CommentSerializer
 from stack_underflow_app.models import Answer, Comment, PostType, Votes
-from stack_underflow_app.permissions import CustomPermissions
+from stack_underflow_app.permissions import (CustomPermissions,
+                                             HasEnoughReputationPoints)
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ class AnswerViewSet(ModelViewSet):
         logger.info(msg=f"Answer with Id {answer.id} updated successfully")
         return Response(status=status.HTTP_200_OK)
 
-    @action(methods=["POST"], detail=True)
+    @action(methods=["POST"], detail=True, permission_classes=[HasEnoughReputationPoints])
     def upvote(self, request, pk):
         user_id = request.user.id
         answer_id = pk
@@ -96,7 +97,7 @@ class AnswerViewSet(ModelViewSet):
         logger.info(msg=f"Vote with Id {vote.id} recorded successfully for Answer with Id {answer_id}")
         return Response(status=status.HTTP_200_OK)
 
-    @action(methods=["POST"], detail=True)
+    @action(methods=["POST"], detail=True, permission_classes=[HasEnoughReputationPoints])
     def downvote(self, request, pk):
         user_id = request.user.id
         answer_id = pk
