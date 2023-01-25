@@ -53,6 +53,14 @@ class AnswerViewSet(ModelViewSet):
         logger.info(msg=f"Answer with id: {answer.id} posted successfully by: {request.user}")
         return Response(status=status.HTTP_201_CREATED)
 
+    def list(self, request, *args, **kwargs):
+        query_params = request.query_params
+        if query_params:
+            question_id = query_params.get("question_id")
+            return Response(status=status.HTTP_200_OK,
+                            data=self.get_serializer(self.queryset.filter(question_id=question_id), many=True).data)
+        return super().list(request, *args, **kwargs)
+
     def partial_update(self, request, *args, **kwargs):
         data = request.data
         answer = self.get_object()
