@@ -4,9 +4,7 @@ from django.db import models
 
 
 class Tag(models.Model):
-    # TODO : Remove description field
     name = models.CharField("tag name", max_length=10, blank=False, null=False, unique=True, db_index=True)
-    description = models.CharField("description of the tag", max_length=20, blank=True)
 
 
 class User(AbstractUser):
