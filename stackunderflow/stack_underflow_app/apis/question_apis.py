@@ -37,7 +37,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         logger.info(msg="Creating Question object")
         # Serializing the validated data and then De-Serializing it again,
         # to convert OrderedDict into Dict for easier use
-        tags_data = loads(dumps(validated_data.pop("tags")))
+        tags_data = loads(dumps(validated_data.pop("tags", [])))
         # User who posted the question
         user = self.context["request"].user
         serializer = TagSerializer(data=tags_data, many=True)
@@ -51,6 +51,36 @@ class QuestionSerializer(serializers.ModelSerializer):
         question.save()
         question.tags.set(tag_objects)
         return question
+
+    def update(self, instance, validated_data):
+        if ("author" in validated_data
+           or "upvotes" in validated_data
+           or "downvotes" in validated_data
+           or "answers" in validated_data
+           or "comments" in validated_data):
+           raise serializers.ValidationError(detail={"error": "Cannot modify given fields"})
+        tag_objects = []
+        tags_data = validated_data.pop("tags", [])
+        for tag in tags_data:
+            tag_objects.append(Tag.objects.get(name=tag["name"]))
+        modified_fields = []
+        if "title" in validated_data:
+            instance.title = validated_data["title"]
+            modified_fields.append("title")
+        if "description" in validated_data:
+            instance.description = validated_data["description"]
+            modified_fields.append("description")
+        if "status" in validated_data:
+            instance.status = validated_data["status"]
+            if "closing_remark" in validated_data:
+                instance.closing_remark = validated_data["closing_remark"]
+                modified_fields.append("closing_remark")
+            modified_fields.append("status")
+        if not modified_fields:
+            raise serializers.ValidationError(detail={"error": "Request payload empty"})
+        instance.save(update_fields=modified_fields)
+        instance.tags.set(tag_objects)
+        return instance
 
     def get_answers(self, obj):
         answers = Answer.objects.filter(question=obj)
@@ -70,11 +100,16 @@ class QuestionViewSet(ModelViewSet):
     permission_classes = [CustomPermissions]
 
     def get_serializer(self, *args, **kwargs):
+        data = kwargs.pop("data", None)
+        request = kwargs.pop("request", None)
         if self.action == "list":
-            return QuestionSerializer(self.queryset, many=True)
+            return QuestionSerializer(self.queryset, many=True, **kwargs)
         elif self.action == "retrieve":
-            return QuestionSerializer(kwargs["data"])
-        return QuestionSerializer(data=kwargs["data"], context={"request": kwargs["request"]})
+            return QuestionSerializer(data, **kwargs)
+        elif self.action == "create":
+            return QuestionSerializer(data=data, context={"request": request}, **kwargs)
+        elif self.action == "partial_update":
+            return QuestionSerializer(data=data, context={"request": request}, **kwargs)
 
     def list(self, request):
         serializer = self.get_serializer()
@@ -91,6 +126,16 @@ class QuestionViewSet(ModelViewSet):
     def retrieve(self, request, pk):
         serializer = self.get_serializer(data=self.get_object())
         return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def partial_update(self, request, pk):
+        question_data = request.data
+        if request.user != self.get_object().author:
+            # Only the author of the question should be able to update the Question
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        question_serializer = self.get_serializer(data=question_data, request=request, partial=True)
+        question_serializer.is_valid(raise_exception=True)
+        question_serializer.update(self.get_object(), question_data)
+        return Response(status=status.HTTP_200_OK)
 
     @action(methods=["POST"], detail=True, permission_classes=[HasEnoughReputationPoints])
     def upvote(self, request, pk):
