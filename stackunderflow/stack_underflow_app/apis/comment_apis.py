@@ -39,13 +39,14 @@ class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [CustomPermissions]
 
-    def create(self, request, post_type):
+    def create(self, request, post_type, post_pk):
         comment_data = request.data
+        comment_data["post_id"] = post_pk
         author = request.user
         serializer = self.get_serializer(data=comment_data,
                                          context={
                                             "author": author,
-                                            "post_type": post_type
+                                            "post_type": post_type,
                                          })
         serializer.is_valid(raise_exception=True)
         comment = serializer.save()
@@ -58,7 +59,7 @@ class CommentViewSet(ModelViewSet):
         if request.user != comment.author:
             # Only the author of the question should be able to update the Comment
             return Response(status=status.HTTP_403_FORBIDDEN)
-        if ("post_id" in comment_data or "author" in comment_data):
+        if ("author" in comment_data):
             return Response(
                     status=status.HTTP_400_BAD_REQUEST,
                     data={"error": "Cannot modify 'author' or 'post_id' fields"}
@@ -74,13 +75,13 @@ class QuestionCommentViewSet(CommentViewSet):
     post_type = PostType.objects.get(name=PostType.QUES)
     queryset = Comment.objects.filter(post_type=post_type)
 
-    def create(self, request):
-        return super().create(request, post_type=self.post_type)
+    def create(self, request, **kwargs):
+        return super().create(request, post_type=self.post_type, post_pk=kwargs["question_pk"])
 
 
 class AnswerCommentViewSet(CommentViewSet):
     post_type = PostType.objects.get(name=PostType.ANS)
     queryset = Comment.objects.filter(post_type=post_type)
 
-    def create(self, request):
-        return super().create(request, post_type=self.post_type)
+    def create(self, request, **kwargs):
+        return super().create(request, post_type=self.post_type, post_pk=kwargs["answer_pk"])

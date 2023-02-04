@@ -3,6 +3,7 @@ Django==3.2.16
 django-filter==21.1
 djangorestframework==3.14.0
 djangorestframework-simplejwt==4.4.0
+drf-nested-routers==0.93.4
 flake8==5.0.4
 importlib-metadata==4.2.0
 isort==5.10.1

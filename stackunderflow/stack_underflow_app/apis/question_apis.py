@@ -53,12 +53,14 @@ class QuestionSerializer(serializers.ModelSerializer):
         return question
 
     def update(self, instance, validated_data):
-        if ("author" in validated_data
-           or "upvotes" in validated_data
-           or "downvotes" in validated_data
-           or "answers" in validated_data
-           or "comments" in validated_data):
-           raise serializers.ValidationError(detail={"error": "Cannot modify given fields"})
+        if (
+            "author" in validated_data
+            or "upvotes" in validated_data
+            or "downvotes" in validated_data
+            or "answers" in validated_data
+            or "comments" in validated_data
+        ):
+            raise serializers.ValidationError(detail={"error": "Cannot modify given fields"})
         tag_objects = []
         tags_data = validated_data.pop("tags", [])
         for tag in tags_data:

@@ -27,9 +27,10 @@ class AnswerSerializer(serializers.ModelSerializer):
         request = kwargs.pop("request")
         if "question" in validated_data or "author" in validated_data:
             raise serializers.ValidationError(detail={"error": "Cannot modify given fields"})
-        if ("is_accepted" in validated_data
-            and request.user != instance.question.author) \
-            or instance.question.accepted_answer:
+        if (
+            ("is_accepted" in validated_data and request.user != instance.question.author)
+            or instance.question.accepted_answer
+        ):
             raise serializers.ValidationError(detail={"error": "Cannot update given fields"})
         if "answer_body" in validated_data:
             instance.answer_body = validated_data["answer_body"]
