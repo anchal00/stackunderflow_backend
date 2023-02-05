@@ -1,9 +1,10 @@
 import logging
 
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from stack_underflow_app.models import Comment, PostType
+from stack_underflow_app.models import Answer, Comment, PostType, Question
 from stack_underflow_app.permissions import CustomPermissions
 
 logger = logging.getLogger(__name__)
@@ -53,16 +54,20 @@ class CommentViewSet(ModelViewSet):
         logger.info(msg=f"Comment saved successfully with Id {comment.id}")
         return Response(status=status.HTTP_201_CREATED)
 
-    def partial_update(self, request, pk):
+    def retrieve(self, request, *args, **kwargs):
+        comment = get_object_or_404(Comment, pk=kwargs["pk"])
+        return Response(status=status.HTTP_200_OK, data=self.get_serializer(comment).data)
+
+    def partial_update(self, request, **kwargs):
         comment_data = request.data
-        comment = self.get_object()
+        comment = get_object_or_404(Comment, pk=kwargs["pk"])
         if request.user != comment.author:
             # Only the author of the question should be able to update the Comment
             return Response(status=status.HTTP_403_FORBIDDEN)
         if ("author" in comment_data):
             return Response(
                     status=status.HTTP_400_BAD_REQUEST,
-                    data={"error": "Cannot modify 'author' or 'post_id' fields"}
+                    data={"error": "Cannot modify given fields"}
                 )
         serializer = self.get_serializer(comment, data=comment_data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -70,18 +75,39 @@ class CommentViewSet(ModelViewSet):
         logger.info(msg=f"Comment with {comment.id} updated successfully")
         return Response(status=status.HTTP_200_OK)
 
+    def destroy(self, request, *args, **kwargs):
+        comment = get_object_or_404(Comment, pk=kwargs["pk"])
+        comment.delete()
+        return Response(status=status.HTTP_200_OK)
+
 
 class QuestionCommentViewSet(CommentViewSet):
     post_type = PostType.objects.get(name=PostType.QUES)
-    queryset = Comment.objects.filter(post_type=post_type)
+
+    def get_queryset(self, question_pk):
+        return Comment.objects.filter(post_type=self.post_type, post_id=question_pk)
 
     def create(self, request, **kwargs):
         return super().create(request, post_type=self.post_type, post_pk=kwargs["question_pk"])
 
+    def list(self, request, *args, **kwargs):
+        question_pk = kwargs["question_pk"]
+        get_object_or_404(Question, pk=question_pk)
+        return Response(status=status.HTTP_200_OK,
+                        data=self.get_serializer(self.get_queryset(question_pk), many=True).data)
+
 
 class AnswerCommentViewSet(CommentViewSet):
     post_type = PostType.objects.get(name=PostType.ANS)
-    queryset = Comment.objects.filter(post_type=post_type)
+
+    def get_queryset(self, answer_pk):
+        return Comment.objects.filter(post_type=self.post_type, post_id=answer_pk)
 
     def create(self, request, **kwargs):
         return super().create(request, post_type=self.post_type, post_pk=kwargs["answer_pk"])
+
+    def list(self, request, *args, **kwargs):
+        answer_pk = kwargs["answer_pk"]
+        get_object_or_404(Answer, pk=answer_pk)
+        return Response(status=status.HTTP_200_OK,
+                        data=self.get_serializer(self.get_queryset(answer_pk), many=True).data)
