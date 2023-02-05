@@ -50,18 +50,15 @@ class AnswerViewSet(ModelViewSet):
     serializer_class = AnswerSerializer
     permission_classes = [CustomPermissions]
 
-    def create(self, request):
+    def create(self, request, **kwargs):
         data = request.data
         user = request.user.id
-        if not bool(
-            data
-            and data.get("question")
-            and data.get("answer_body")
-        ):
+        if not bool(data and data.get("answer_body")):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if data.get("is_accepted"):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         data["author"] = user
+        data["question"] = kwargs["question_pk"]
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         answer = serializer.save()
@@ -69,12 +66,9 @@ class AnswerViewSet(ModelViewSet):
         return Response(status=status.HTTP_201_CREATED)
 
     def list(self, request, *args, **kwargs):
-        query_params = request.query_params
-        if query_params:
-            question_id = query_params.get("question_id")
-            return Response(status=status.HTTP_200_OK,
-                            data=self.get_serializer(self.queryset.filter(question_id=question_id), many=True).data)
-        return super().list(request, *args, **kwargs)
+        question_pk = kwargs["question_pk"]
+        return Response(status=status.HTTP_200_OK,
+                        data=self.get_serializer(self.queryset.filter(question_id=question_pk), many=True).data)
 
     def partial_update(self, request, *args, **kwargs):
         data = request.data
@@ -89,14 +83,17 @@ class AnswerViewSet(ModelViewSet):
         return Response(status=status.HTTP_200_OK)
 
     @action(methods=["POST"], detail=True, permission_classes=[HasEnoughReputationPoints])
-    def upvote(self, request, pk):
+    def upvote(self, request, **kwargs):
         user_id = request.user.id
-        answer_id = pk
+        answer_id = kwargs["pk"]
+        if self.get_object().author == request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         vote, created = Votes.objects.get_or_create(post_id=answer_id,
                                                     post_type=PostType.objects.get(name=PostType.ANS),
                                                     user_id=user_id,
                                                     defaults={"upvote": True, "downvote": False})
         had_already_voted = not created
+        vote_id = vote.id
         if had_already_voted:
             if vote.upvote:
                 # Remove the vote if user had already upvoted and now upvotes again
@@ -106,18 +103,21 @@ class AnswerViewSet(ModelViewSet):
                 vote.upvote = True
                 vote.downvote = False
                 vote.save()
-        logger.info(msg=f"Vote with Id {vote.id} recorded successfully for Answer with Id {answer_id}")
+        logger.info(msg=f"Vote with Id {vote_id} recorded successfully for Answer with Id {answer_id}")
         return Response(status=status.HTTP_200_OK)
 
     @action(methods=["POST"], detail=True, permission_classes=[HasEnoughReputationPoints])
-    def downvote(self, request, pk):
+    def downvote(self, request, **kwargs):
         user_id = request.user.id
-        answer_id = pk
+        answer_id = kwargs["pk"]
+        if self.get_object().author == request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         vote, created = Votes.objects.get_or_create(post_id=answer_id,
                                                     post_type=PostType.objects.get(name=PostType.ANS),
                                                     user_id=user_id,
                                                     defaults={"upvote": False, "downvote": True})
         had_already_voted = not created
+        vote_id = vote.id
         if had_already_voted:
             if vote.downvote:
                 # Remove the vote if user had already downvoted and now downvotes again
@@ -127,5 +127,5 @@ class AnswerViewSet(ModelViewSet):
                 vote.upvote = False
                 vote.downvote = True
                 vote.save()
-        logger.info(msg=f"Vote with Id {vote.id} recorded successfully for Answer with Id {answer_id}")
+        logger.info(msg=f"Vote with Id {vote_id} recorded successfully for Answer with Id {answer_id}")
         return Response(status=status.HTTP_200_OK)
