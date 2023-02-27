@@ -7,7 +7,6 @@ from stack_underflow_app.apis.tag_apis import TagViewSet
 
 router = routers.DefaultRouter()
 router.register("questions", QuestionViewSet, basename="questions")
-# router.register("answers", AnswerViewSet, basename="answers")
 router.register("tags", TagViewSet, basename="tags")
 
 # For Question's comments
