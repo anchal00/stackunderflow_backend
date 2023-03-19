@@ -82,13 +82,12 @@ class CommentViewSet(ModelViewSet):
 
 
 class QuestionCommentViewSet(CommentViewSet):
-    post_type = PostType.objects.get(name=PostType.QUES)
 
     def get_queryset(self, question_pk):
-        return Comment.objects.filter(post_type=self.post_type, post_id=question_pk)
+        return Comment.objects.filter(post_type=PostType.objects.get(name=PostType.QUES), post_id=question_pk)
 
     def create(self, request, **kwargs):
-        return super().create(request, post_type=self.post_type, post_pk=kwargs["question_pk"])
+        return super().create(request, post_type=PostType.objects.get(name=PostType.QUES), post_pk=kwargs["question_pk"])
 
     def list(self, request, *args, **kwargs):
         question_pk = kwargs["question_pk"]
@@ -98,13 +97,12 @@ class QuestionCommentViewSet(CommentViewSet):
 
 
 class AnswerCommentViewSet(CommentViewSet):
-    post_type = PostType.objects.get(name=PostType.ANS)
 
     def get_queryset(self, answer_pk):
-        return Comment.objects.filter(post_type=self.post_type, post_id=answer_pk)
+        return Comment.objects.filter(post_type=PostType.objects.get(name=PostType.ANS), post_id=answer_pk)
 
     def create(self, request, **kwargs):
-        return super().create(request, post_type=self.post_type, post_pk=kwargs["answer_pk"])
+        return super().create(request, post_type=PostType.objects.get(name=PostType.ANS), post_pk=kwargs["answer_pk"])
 
     def list(self, request, *args, **kwargs):
         answer_pk = kwargs["answer_pk"]
